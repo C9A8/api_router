@@ -1,1 +1,1 @@
-{"root":["./src/app.ts","./src/server.ts","./src/config/db.ts","./src/config/env.ts"],"version":"5.8.3"}
+{"root":["./src/app.ts","./src/server.ts","./src/config/db.ts","./src/config/env.ts","./src/db_schema/schema.ts"],"version":"5.8.3"}
