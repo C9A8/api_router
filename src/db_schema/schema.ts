@@ -7,8 +7,8 @@ const usersTable = async ()=>{
         await client.query(`
             CREATE TABLE IF NOT EXISTS users(
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-            email TEXT UNIQUE NOT NULL,
-            name TEXT,
+            email VARCHAR(100) UNIQUE NOT NULL,
+            name VARCHAR(100),
             created_at TIMESTAMPTZ DEFAULT NOW(),
             updated_at TIMESTAMPTZ DEFAULT NOW()
             )`)
@@ -30,9 +30,9 @@ const accountTable = async ()=>{
             CREATE TABLE IF NOT EXISTS accounts(
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            provider TEXT NOT NULL,
-            provider_id TEXT NOT NULL,
-            provider_email TEXT,
+            provider VARCHAR(100) NOT NULL,
+            provider_id VARCHAR(100) NOT NULL,
+            provider_email VARCHAR(100),
             access_token TEXT,
             refresh_token TEXT,
             expire_at  TIMESTAMPTZ,
@@ -80,7 +80,7 @@ const ai_requestTable = async()=>{
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             prompt TEXT NOT NULL,
-            model_used TEXT NOT NULL,
+            model_used VARCHAR(100) NOT NULL,
             response TEXT,
             cost NUMERIC(10,4) NOT NULL,
             created_at TIMESTAMPTZ DEFAULT NOW()
