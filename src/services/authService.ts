@@ -1,9 +1,8 @@
 import pool from "../config/db";
 import bcrypt from "bcrypt";
-//import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
 
 // Register a new user
-export const registerUserService = async (email: string, name: string, password: string) => {
+export const registerUserService = async (email: string , name: string , password: string) => {
   const client = await pool.connect();
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -15,7 +14,6 @@ export const registerUserService = async (email: string, name: string, password:
       [email, name, hashedPassword]
     );
 
-    return result.rows[0];
   } catch (error: any) {
     if (error.code === "23505") {
       throw new Error("Email already exists");
@@ -27,3 +25,41 @@ export const registerUserService = async (email: string, name: string, password:
   }
 };
 
+//Signin user
+
+export const loginUsersService = async (email: string, password: string) => {
+  const client = await pool.connect();
+
+  try {
+    // Find the user by email
+    const result = await client.query(
+      'SELECT id,email, password FROM users WHERE email = $1',
+      [email]
+    );
+
+    // Check if user exists
+    if (result.rows.length === 0) {
+      return { success: false, message: 'User not found' };
+    }
+
+    const user = result.rows[0];
+
+    // Compare password with bcrypt
+    const match = await bcrypt.compare(password, user.password);
+
+    if (!match) {
+      return { success: false, message: 'Invalid password' };
+    }
+
+    return {
+      success: true,
+      message: 'Login successful',
+      user   : { id: user.id },
+    };
+
+  } catch (error: any) {
+    throw new Error(`Failed to login: ${error.message}`);
+  } finally {
+    client.release();
+  }
+};

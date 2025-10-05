@@ -1,13 +1,17 @@
+import { config } from '../config/env';
 import { Pool } from 'pg'; 
 
-
-const pool = new Pool({
-    connectionString : process.env.DATABASE_URL,
-    ssl : {
-        rejectUnauthorized : false
-    },
-    max : 10,
-    
-});
-
+const getPool = ()=>{
+    try {
+        return new Pool({
+        connectionString : config.dburl,
+        ssl : {
+            rejectUnauthorized : false
+        }
+    })
+    } catch (error) {
+        console.log(error)
+    }
+}
+const pool:any =  getPool();
 export default pool;
