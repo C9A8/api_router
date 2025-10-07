@@ -1,5 +1,3 @@
-
-
 import pool from "../config/db"
 
 export const addPasswordColumn = async () => {
@@ -42,3 +40,27 @@ export const addPasswordColumn = async () => {
 // (async()=>{
 //     await addPasswordColumn();
 // })()
+
+
+//reset password to nullable
+export const setPasswordToNull = async()=>{
+    const client = await pool.connect();
+    client.query(`
+        ALTER TABLE users 
+        ALTER COLUMN password 
+        DROP NOT NULL;
+`);
+console.log("done");
+}
+
+// remove accesstoken column from db
+export const dropAccessToken = async()=>{
+    const client = await pool.connect();
+    client.query(`
+        ALTER TABLE accounts 
+        DROP COLUMN access_token;
+        `);
+console.log("done");
+}
+
+

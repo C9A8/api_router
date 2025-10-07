@@ -33,7 +33,6 @@ const accountTable = async ()=>{
             provider VARCHAR(100) NOT NULL,
             provider_id VARCHAR(100) NOT NULL,
             provider_email VARCHAR(100),
-            access_token TEXT,
             refresh_token TEXT,
             expire_at  TIMESTAMPTZ,
             created_at TIMESTAMPTZ  DEFAULT NOW(),

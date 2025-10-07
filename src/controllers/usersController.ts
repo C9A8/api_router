@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
 import { loginUsersSchema, registerUsersSchema } from "../zod_schema/authSchema";
 import { loginUsersService, registerUserService} from "../services/authService";
-import { generateAccessToken, generateRefreshToken } from "../utils/jwtUtil";
-import { json } from "zod";
+
 
 
 //Signup user funtion
@@ -14,21 +13,22 @@ export const registerUsers = async (req: Request, res: Response) => {
         error: parsed.error.issues 
     });
   }
+  console.log(parsed.data.email,parsed.data.name);
 
   try {
     const { email, name, password } = parsed.data;
+     
     const user = await registerUserService(email, name, password);
     res.status(201).json({ 
       message : "User created please login",
-      token   : user 
+      user   : user 
           
      });
   } catch (error: any) {
     res.status(400).json({
          error: error.message, 
          message : "Something went wrong"
-         
-        });
+         });
   }
 };
 
@@ -57,12 +57,12 @@ export const signInUsers = async (req: Request, res: Response) => {
     }
 
     //  Generate tokens
-    const accessToken = generateAccessToken(result.user?.id);
-    const refreshToken = generateRefreshToken(result.user?.id);
+    // const accessToken = generateAccessToken(result.user?.id);
+    // const refreshToken = generateRefreshToken(result.user?.id);
 
     //store refresh token in cookie
 
-    res.cookie('refreshToken', refreshToken, {
+    res.cookie('refreshToken', result.refreshToken, {
        httpOnly: true,
        secure: process.env.NODE_ENV === 'production',
        sameSite: 'strict',
@@ -71,9 +71,8 @@ export const signInUsers = async (req: Request, res: Response) => {
 
     // Respond to client
     return res.status(200).json({
-      message: "SignIn successful",
-      accessToken,
-      refreshToken
+      message      : "SignIn successful",
+      accessToken  : result.accessToken,
     });
 
   } catch (error: any) {
@@ -85,7 +84,7 @@ export const signInUsers = async (req: Request, res: Response) => {
 };
 
 
-//prtected 
+//protected 
 
 export const getInfo = async (req: Request, res: Response)=>{
   res.send("hello baby ")
