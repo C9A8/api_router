@@ -1,4 +1,3 @@
-import { success } from "zod";
 import pool from "../config/db";
 import bcrypt from "bcrypt";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwtUtil";
@@ -31,26 +30,30 @@ export const registerUserService = async (email: string , name: string , passwor
 export const loginUsersService = async (email: string, password: string) => {
   const client = await pool.connect();
   try {
-    const result = await client.query(`SELECT id, email, password FROM users WHERE email = $1`, [email]);
-    //Checking user exits or not
-    if (result.rows.length === 0) 
-    return { success: false, message: "User not found" };
+    await client.query("BEGIN");
+
+    const result = await client.query(
+      `SELECT id, email, password FROM users WHERE email = $1`,
+      [email]
+    );
+    if (result.rows.length === 0)
+      return { success: false, message: "User not found" };
 
     const user = result.rows[0];
 
-    //Checking for passwerd
-    if(!password && password.length < 6)
-      return { success : false, message : "Password is require"}
+    if (!password || password.length < 6)
+      return { success: false, message: "Password is required" };
 
-    //Checking for correct password
     const match = await bcrypt.compare(password, user.password);
     if (!match) return { success: false, message: "Invalid password" };
 
-    // Generate tokens
+    //Creating access and refresh token 
+
     const accessToken = generateAccessToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
+    const expires_AT = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-    // Upsert account table
+    // Upsert to accounts table
     const existingAccount = await client.query(
       `SELECT * FROM accounts WHERE user_id = $1 AND provider = $2`,
       [user.id, "local"]
@@ -64,13 +67,31 @@ export const loginUsersService = async (email: string, password: string) => {
       );
     } else {
       await client.query(
-        `UPDATE accounts SET refresh_token = $1, updated_at = NOW() 
+        `UPDATE accounts 
+         SET refresh_token = $1, updated_at = NOW() 
          WHERE user_id = $2 AND provider = 'local'`,
         [refreshToken, user.id]
       );
     }
 
-    return { success: true, user: { id: user.id }, accessToken, refreshToken };
+    // Insert session
+    await client.query(
+      `INSERT INTO sessions (user_id, token, expires_at) VALUES ($1, $2, $3)`,
+      [user.id, refreshToken, expires_AT]
+    );
+
+    await client.query("COMMIT");
+
+    return {
+      success: true,
+      user: { id: user.id },
+      accessToken,
+      refreshToken,
+    };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Login error:", error);
+    return { success: false, message: "Login failed" };
   } finally {
     client.release();
   }

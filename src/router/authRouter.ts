@@ -13,7 +13,10 @@ authRouter.get(
 // Google callback
 authRouter.get(
   "/google/callback",
-  passport.authenticate("google", { session: false }),
+  passport.authenticate("google", { 
+    session: false,
+    accessType: "offline",
+    prompt: "consent", }),
   (req, res) => {
     const user = req.user as { id: string };
 
@@ -21,7 +24,7 @@ authRouter.get(
     const accessToken = generateAccessToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
 
-    // Optional: store refresh token in cookies
+    //store refresh token in cookies
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

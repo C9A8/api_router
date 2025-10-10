@@ -12,6 +12,6 @@ userRoutes.post("/signup",registerUsers);
 userRoutes.post("/signin",signInUsers)
 
 //refresh token routr
-userRoutes.get("/refresh",refreshToken);
+userRoutes.post("/refresh",refreshToken);
 //protected route
 userRoutes.get("/get",verifyToken,getInfo);
